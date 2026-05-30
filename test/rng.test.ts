@@ -22,14 +22,11 @@ describe("randomIndex", () => {
     }
   });
 
-  it("returns 0 for n === 1 without consuming randomness", () => {
-    expect(randomIndex(1)).toBe(0);
-  });
-
-  it("rejects non-positive / non-integer n", () => {
+  it("rejects out-of-range / non-integer n", () => {
     expect(() => randomIndex(0)).toThrow(RangeError);
     expect(() => randomIndex(-5)).toThrow(RangeError);
     expect(() => randomIndex(2.5)).toThrow(RangeError);
+    expect(() => randomIndex(257)).toThrow(RangeError);
   });
 });
 

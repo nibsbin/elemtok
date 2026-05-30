@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ELEMENT_SYMBOLS, SYMBOL_COUNT, BITS_PER_SYMBOL } from "../src/symbols.js";
+import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "../src/symbols.js";
 
 const EXCLUDED_SINGLE_LETTERS = ["H", "B", "C", "N", "O", "F", "P", "S", "K", "V", "W", "Y", "I", "U"];
 
@@ -27,9 +27,5 @@ describe("ELEMENT_SYMBOLS", () => {
 
   it("is frozen against mutation", () => {
     expect(Object.isFrozen(ELEMENT_SYMBOLS)).toBe(true);
-  });
-
-  it("yields ~6.7 bits of entropy per symbol", () => {
-    expect(BITS_PER_SYMBOL).toBeCloseTo(6.7, 1);
   });
 });

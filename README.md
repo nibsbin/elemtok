@@ -53,7 +53,7 @@ validate(token);                 // true
 validate("feaurncuxe");          // false  (case-sensitive)
 validate("XxAuRnCuXe");          // false  (Xx is not an element)
 
-generate({ delimiter: "-" });    // "Fe-Au-Rn-Cu-Xe"  (hyphens are opt-in)
+generate({ length: 8 });         // 8 symbols ≈ 53.6 bits
 ```
 
 CommonJS:
@@ -66,50 +66,45 @@ const { generate, validate } = require("elemental-tokens");
 
 ### `generate(options?): string`
 
-Generates a token. Each symbol is drawn uniformly from the vocabulary with a
-CSPRNG and rejection sampling — that's the full 6.7 bits per symbol, no modulo
-bias shaving anything off.
+Generates a token. Each symbol is drawn uniformly from the 104-symbol
+vocabulary with a CSPRNG and rejection sampling — that's the full 6.7 bits per
+symbol, no modulo bias shaving anything off.
 
-| Option      | Type       | Default            | Description                              |
-| ----------- | ---------- | ------------------ | ---------------------------------------- |
-| `length`    | `number`   | `5`                | Number of symbols. Positive integer.     |
-| `delimiter` | `string`   | `""`               | String placed between symbols.           |
-| `symbols`   | `string[]` | the 104 elements   | Override the vocabulary entirely.        |
+| Option   | Type     | Default | Description                          |
+| -------- | -------- | ------- | ------------------------------------ |
+| `length` | `number` | `5`     | Number of symbols. Positive integer. |
 
 ```ts
-generate();                                   // "MgScPbReNd"
-generate({ length: 8 });                      // 8 symbols ≈ 53.6 bits
-generate({ delimiter: "-" });                 // "Mg-Sc-Pb-Re-Nd"
-generate({ symbols: ["aa", "bb", "cc"] });    // custom vocabulary
+generate();              // "MgScPbReNd"
+generate({ length: 8 }); // 8 symbols ≈ 53.6 bits
 ```
 
-Throws `RangeError` if `length` is not a positive integer, or if `symbols` is
-provided but not a non-empty array.
+Throws `RangeError` if `length` is not a positive integer. The token is a bare
+concatenation of two-character symbols; if you want a hyphenated form, split it
+yourself: `token.match(/../g).join("-")`.
 
-### `validate(token, options?): boolean`
+### `validate(token): boolean`
 
-Returns `true` only if every segment is a known symbol. Strict and
+Returns `true` only if the token is a concatenation of known symbols. Strict and
 **case-sensitive** — `"FeAu"` is valid, `"feau"` is not. No trimming, no
-checksum. With the default empty delimiter the token is split into fixed-width
-chunks (2 chars for the element symbols), so a token whose length is not a whole
-number of symbols fails. With an explicit delimiter, `false` is returned for any
-empty segment (leading, trailing, or doubled delimiters). Pass the same
-`delimiter` / `symbols` you generated with.
+checksum. The token is split into fixed-width 2-char chunks, so an empty token,
+a token whose length is not a whole number of symbols, or any chunk that is not
+an element symbol all return `false`.
 
 ```ts
-validate("FeAuRnCuXe");                           // true
-validate("Fe-Au-Rn-Cu-Xe", { delimiter: "-" });   // true
-validate("Fe.Au", { delimiter: "." });            // true
-validate("aabb", { symbols: ["aa", "bb"] });      // true
+validate("FeAuRnCuXe"); // true
+validate("feaurncuxe"); // false  (case-sensitive)
+validate("XxFe");       // false  (Xx is not an element)
+validate("Fe-Au");      // false  (no delimiters)
 ```
 
 ### Exported constants
 
 ```ts
-import { ELEMENT_SYMBOLS, SYMBOL_COUNT, BITS_PER_SYMBOL } from "elemental-tokens";
+import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "elemental-tokens";
 
-SYMBOL_COUNT;     // 104
-BITS_PER_SYMBOL;  // 6.700439718141092
+SYMBOL_COUNT;          // 104
+ELEMENT_SYMBOLS[0];    // "He"
 ```
 
 ## Entropy math
@@ -176,7 +171,7 @@ Types ship with the package:
 ```ts
 import { generate, type GenerateOptions } from "elemental-tokens";
 
-const opts: GenerateOptions = { length: 8, delimiter: "-" };
+const opts: GenerateOptions = { length: 8 };
 const token = generate(opts);
 ```
 

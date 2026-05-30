@@ -1,20 +1,17 @@
 /**
  * Cryptographically secure, unbiased index sampling.
  *
- * Everything here is built on `globalThis.crypto.getRandomValues`, the Web
- * Crypto API. It is present in browsers, Web Workers, Deno, Bun, Cloudflare
- * Workers, and Node.js >= 18 — a single isomorphic code path with no Node-only
- * imports, so the bundle stays browser-safe. `Math.random` is never used.
+ * Built entirely on `globalThis.crypto.getRandomValues` (the Web Crypto API):
+ * present in browsers, Web Workers, Deno, Bun, Cloudflare Workers, and Node.js
+ * >= 18 — a single isomorphic code path with no Node-only imports, so the bundle
+ * stays browser-safe. `Math.random` is never used.
  */
-
-/** Largest number of bytes we read in one go before refilling the pool. */
-const POOL_SIZE = 256;
 
 /**
- * Fill the given buffer with cryptographically secure random bytes.
+ * Read one cryptographically secure random byte.
  * Throws if no secure source is available rather than silently degrading.
  */
-function fillRandomBytes(buffer: Uint8Array): void {
+function secureByte(): number {
   const cryptoObj = globalThis.crypto;
   if (!cryptoObj || typeof cryptoObj.getRandomValues !== "function") {
     throw new Error(
@@ -22,82 +19,42 @@ function fillRandomBytes(buffer: Uint8Array): void {
         "(globalThis.crypto.getRandomValues is required).",
     );
   }
+  const buffer = new Uint8Array(1);
   cryptoObj.getRandomValues(buffer);
+  return buffer[0];
 }
 
 /**
- * A self-refilling stream of cryptographically secure bytes. Reading one byte
- * at a time keeps the rejection-sampling loop simple while still amortizing the
- * cost of each `getRandomValues` call across a whole pool.
- */
-function createByteSource(): () => number {
-  const pool = new Uint8Array(POOL_SIZE);
-  let offset = pool.length; // force a fill on first read
-  return () => {
-    if (offset >= pool.length) {
-      fillRandomBytes(pool);
-      offset = 0;
-    }
-    return pool[offset++];
-  };
-}
-
-/**
- * Uniformly sample an integer in [0, n) from an injectable byte source using
- * rejection sampling. Exposed (internally) so tests can drive it with a
- * deterministic byte stream and prove the no-bias property exactly.
+ * Uniformly sample an integer in [0, n) for 1 <= n <= 256 from an injectable
+ * byte source, using rejection sampling. The byte source is injectable so tests
+ * can drive it with a deterministic stream and prove the no-bias property
+ * exactly.
  *
- * Why rejection sampling: 256 is not a multiple of most n, so a naive
- * `byte % n` over-represents the low residues (modulo bias). We accept only
- * bytes in [0, max) where `max` is the largest multiple of n that fits the
- * byte range; within that window every residue class is equally populated.
+ * Why rejection sampling: 256 is not a multiple of most n, so a naive `byte % n`
+ * over-represents the low residues (modulo bias). We accept only bytes in
+ * [0, max), where `max` is the largest multiple of n that fits a byte; within
+ * that window every residue class is equally populated. (For n = 104,
+ * max = 208, so 48 of the 256 byte values are rejected.)
  */
 export function randomIndexFrom(n: number, nextByte: () => number): number {
-  if (!Number.isInteger(n) || n < 1) {
-    throw new RangeError(`elemental-tokens: n must be a positive integer, got ${n}`);
-  }
-  if (n === 1) return 0;
-
-  if (n <= POOL_SIZE) {
-    const max = Math.floor(POOL_SIZE / n) * n; // e.g. n=104 -> 208
-    for (;;) {
-      const b = nextByte();
-      if (b < max) return b % n;
-      // otherwise reject and resample
-    }
+  if (!Number.isInteger(n) || n < 1 || n > 256) {
+    throw new RangeError(
+      `elemental-tokens: n must be an integer in [1, 256], got ${n}`,
+    );
   }
 
-  // Multi-byte path: only reachable via a custom `symbols` list larger than 256.
-  const bytesNeeded = Math.ceil(Math.log2(n) / 8);
-  if (bytesNeeded <= 6) {
-    // Stays within Number.MAX_SAFE_INTEGER (2^48 < 2^53).
-    const range = Math.pow(POOL_SIZE, bytesNeeded);
-    const max = Math.floor(range / n) * n;
-    for (;;) {
-      let value = 0;
-      for (let i = 0; i < bytesNeeded; i++) value = value * POOL_SIZE + nextByte();
-      if (value < max) return value % n;
-    }
-  }
-
-  // Very large custom vocabularies: use BigInt to stay exact.
-  const bigN = BigInt(n);
-  const bigRange = BigInt(POOL_SIZE) ** BigInt(bytesNeeded);
-  const bigMax = (bigRange / bigN) * bigN;
+  const max = Math.floor(256 / n) * n;
   for (;;) {
-    let value = 0n;
-    for (let i = 0; i < bytesNeeded; i++) value = value * BigInt(POOL_SIZE) + BigInt(nextByte());
-    if (value < bigMax) return Number(value % bigN);
+    const b = nextByte();
+    if (b < max) return b % n;
+    // otherwise reject and resample
   }
 }
-
-/** Process-wide CSPRNG byte stream backing the public sampler. */
-const secureByteSource = createByteSource();
 
 /**
  * Uniformly sample an integer in [0, n) from the platform CSPRNG, free of
  * modulo bias.
  */
 export function randomIndex(n: number): number {
-  return randomIndexFrom(n, secureByteSource);
+  return randomIndexFrom(n, secureByte);
 }
