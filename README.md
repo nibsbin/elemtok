@@ -154,8 +154,8 @@ for five minutes and gets at most a few dozen guesses before lockout.
   or malformed token fails immediately. If you need offline typo detection, use a
   longer token or add your own check digit.
 - **Pick length for your threat model.** The default 33.5 bits is comfortable for
-  rate-limited, short-lived tokens (50 guesses in 5 minutes is ~`50 / 2^33.5` ≈ 1
-  in 170 million per window). It is **not** sized for offline brute force — for
+  rate-limited, short-lived tokens (100 guesses in 5 minutes is ~`100 / 2^33.5` ≈ 1
+  in 121 million per window). It is **not** sized for offline brute force — for
   secrets that must resist that, use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
 ## Comparison to a BIP39 wordlist
