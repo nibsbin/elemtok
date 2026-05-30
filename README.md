@@ -3,7 +3,7 @@
 **Human-transcribable, LLM-stable tokens built from chemical element symbols.**
 
 ```
-Fe-Au-Rn-Cu-Xe
+FeAuRnCuXe
 ```
 
 Five symbols off the periodic table. Easy to read aloud, easy to type, easy for
@@ -48,10 +48,12 @@ Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 18 and in the brows
 ```ts
 import { generate, validate } from "elemental-tokens";
 
-const token = generate();        // "Fe-Au-Rn-Cu-Xe"
+const token = generate();        // "FeAuRnCuXe"
 validate(token);                 // true
-validate("fe-au-rn-cu-xe");      // false  (case-sensitive)
-validate("Xx-Au-Rn-Cu-Xe");      // false  (Xx is not an element)
+validate("feaurncuxe");          // false  (case-sensitive)
+validate("XxAuRnCuXe");          // false  (Xx is not an element)
+
+generate({ delimiter: "-" });    // "Fe-Au-Rn-Cu-Xe"  (hyphens are opt-in)
 ```
 
 CommonJS:
@@ -71,13 +73,13 @@ bias shaving anything off.
 | Option      | Type       | Default            | Description                              |
 | ----------- | ---------- | ------------------ | ---------------------------------------- |
 | `length`    | `number`   | `5`                | Number of symbols. Positive integer.     |
-| `delimiter` | `string`   | `"-"`              | String placed between symbols.           |
+| `delimiter` | `string`   | `""`               | String placed between symbols.           |
 | `symbols`   | `string[]` | the 104 elements   | Override the vocabulary entirely.        |
 
 ```ts
-generate();                                   // "Mg-Sc-Pb-Re-Nd"
+generate();                                   // "MgScPbReNd"
 generate({ length: 8 });                      // 8 symbols ≈ 53.6 bits
-generate({ delimiter: "" });                  // "MgScPbReNd"
+generate({ delimiter: "-" });                 // "Mg-Sc-Pb-Re-Nd"
 generate({ symbols: ["aa", "bb", "cc"] });    // custom vocabulary
 ```
 
@@ -86,16 +88,19 @@ provided but not a non-empty array.
 
 ### `validate(token, options?): boolean`
 
-Returns `true` only if every delimiter-separated segment is a known symbol.
-Strict and **case-sensitive** — `"Fe-Au"` is valid, `"fe-au"` is not. No trimming,
-no checksum. Returns `false` for an empty token or any empty segment (leading,
-trailing, or doubled delimiters). Pass the same `delimiter` / `symbols` you
-generated with.
+Returns `true` only if every segment is a known symbol. Strict and
+**case-sensitive** — `"FeAu"` is valid, `"feau"` is not. No trimming, no
+checksum. With the default empty delimiter the token is split into fixed-width
+chunks (2 chars for the element symbols), so a token whose length is not a whole
+number of symbols fails. With an explicit delimiter, `false` is returned for any
+empty segment (leading, trailing, or doubled delimiters). Pass the same
+`delimiter` / `symbols` you generated with.
 
 ```ts
-validate("Fe-Au-Rn-Cu-Xe");                       // true
+validate("FeAuRnCuXe");                           // true
+validate("Fe-Au-Rn-Cu-Xe", { delimiter: "-" });   // true
 validate("Fe.Au", { delimiter: "." });            // true
-validate("aa-bb", { symbols: ["aa", "bb"] });     // true
+validate("aabb", { symbols: ["aa", "bb"] });      // true
 ```
 
 ### Exported constants
