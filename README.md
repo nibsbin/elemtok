@@ -143,10 +143,11 @@ for five minutes and gets at most a few dozen guesses before lockout.
 
 - **CSPRNG only.** Randomness comes from `crypto.getRandomValues` (Web Crypto,
   present in Node ≥ 24 and browsers). `Math.random` is never used.
-- **No modulo bias.** Sampling uses rejection sampling, so each of the 104
-  symbols is equally likely and the per-symbol entropy really is the full 6.7
-  bits — not "6.7 bits minus a sliver." (The 256-byte enumeration test proves
-  each symbol is reachable from exactly two byte values.)
+- **No modulo bias.** Sampling uses rejection sampling over a 16-bit window, so
+  each of the 104 symbols is equally likely and the per-symbol entropy really is
+  the full 6.7 bits — not "6.7 bits minus a sliver." (The 65536-value
+  enumeration test proves each symbol is reachable from exactly 630 of the
+  65536 values, with only 16 rejected — a ~0.024% resample rate.)
 - **The whole vocabulary is public.** Observing tokens teaches an attacker
   nothing; the search space is fixed at `104^length`.
 - **No checksum, by design.** Error detection is the database lookup — an unknown
