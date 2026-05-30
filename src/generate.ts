@@ -5,9 +5,10 @@ import { DEFAULT_DELIMITER, DEFAULT_LENGTH, type GenerateOptions } from "./types
 /**
  * Generate a token from element symbols.
  *
- * Defaults to 5 symbols joined by "-", e.g. `"Fe-Au-Rn-Cu-Xe"`. Each symbol is
- * drawn uniformly from the 104-symbol vocabulary using a CSPRNG with rejection
- * sampling, contributing ~6.7 bits of entropy.
+ * Defaults to 5 symbols concatenated with no delimiter, e.g. `"FeAuRnCuXe"`.
+ * Pass `delimiter: "-"` for the hyphenated form `"Fe-Au-Rn-Cu-Xe"`. Each symbol
+ * is drawn uniformly from the 104-symbol vocabulary using a CSPRNG with
+ * rejection sampling, contributing ~6.7 bits of entropy.
  *
  * @throws {RangeError} if `length` is not a positive integer, or if `symbols`
  * is provided but is not a non-empty array.

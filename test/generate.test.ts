@@ -4,30 +4,31 @@ import { validate } from "../src/validate.js";
 import { ELEMENT_SYMBOLS } from "../src/symbols.js";
 
 describe("generate", () => {
-  it("produces 5 hyphen-joined canonical symbols by default", () => {
+  it("produces 5 concatenated canonical symbols by default", () => {
     for (let i = 0; i < 200; i++) {
       const token = generate();
-      expect(token).toMatch(/^[A-Z][a-z](-[A-Z][a-z]){4}$/);
+      expect(token).toMatch(/^([A-Z][a-z]){5}$/);
     }
   });
 
   it("draws every segment from the vocabulary", () => {
     const known = new Set(ELEMENT_SYMBOLS);
     for (let i = 0; i < 200; i++) {
-      for (const segment of generate().split("-")) {
-        expect(known.has(segment)).toBe(true);
+      const token = generate();
+      for (let j = 0; j < token.length; j += 2) {
+        expect(known.has(token.slice(j, j + 2))).toBe(true);
       }
     }
   });
 
   it("respects the length option", () => {
     for (const length of [1, 3, 8, 32]) {
-      const segments = generate({ length }).split("-");
-      expect(segments.length).toBe(length);
+      expect(generate({ length }).length).toBe(length * 2);
     }
   });
 
   it("respects a custom delimiter", () => {
+    expect(generate({ length: 5, delimiter: "-" })).toMatch(/^[A-Z][a-z](-[A-Z][a-z]){4}$/);
     expect(generate({ length: 3, delimiter: "." })).toMatch(/^[A-Z][a-z](\.[A-Z][a-z]){2}$/);
     expect(generate({ length: 2, delimiter: "" })).toMatch(/^[A-Z][a-z][A-Z][a-z]$/);
   });
