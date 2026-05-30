@@ -34,7 +34,7 @@ export function generate(options: GenerateOptions = {}): string {
 
   if (!Number.isInteger(length) || length < 1 || length > MAX_LENGTH) {
     throw new RangeError(
-      `elemental-tokens: length must be an integer in [1, ${MAX_LENGTH}], got ${length}`,
+      `elemtok: length must be an integer in [1, ${MAX_LENGTH}], got ${length}`,
     );
   }
 

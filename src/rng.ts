@@ -25,7 +25,7 @@ function secureUint16(): number {
   const cryptoObj = globalThis.crypto;
   if (!cryptoObj || typeof cryptoObj.getRandomValues !== "function") {
     throw new Error(
-      "elemental-tokens: no secure random source available " +
+      "elemtok: no secure random source available " +
         "(globalThis.crypto.getRandomValues is required).",
     );
   }
@@ -54,7 +54,7 @@ function secureUint16(): number {
 export function randomIndexFrom(n: number, next16: () => number): number {
   if (!Number.isInteger(n) || n < 1 || n > DRAW_SPACE) {
     throw new RangeError(
-      `elemental-tokens: n must be an integer in [1, ${DRAW_SPACE}], got ${n}`,
+      `elemtok: n must be an integer in [1, ${DRAW_SPACE}], got ${n}`,
     );
   }
 

@@ -1,6 +1,6 @@
 {
-  "name": "elemental-tokens",
-  "version": "0.1.0",
+  "name": "elemtok",
+  "version": "1.0.0",
   "description": "Human-transcribable, LLM-stable tokens built from chemical element symbols",
   "type": "module",
   "sideEffects": false,
