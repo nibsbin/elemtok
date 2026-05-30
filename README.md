@@ -74,7 +74,7 @@ symbol, no modulo bias shaving anything off.
 
 | Option   | Type     | Default | Description                          |
 | -------- | -------- | ------- | ------------------------------------ |
-| `length` | `number` | `5`     | Number of symbols. Positive integer. |
+| `length` | `number` | `5`     | Number of symbols. Integer in `[1, 65536]`. |
 
 ```ts
 generate();              // "MgScPbReNd"
