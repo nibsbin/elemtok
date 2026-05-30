@@ -3,8 +3,10 @@
  *
  * Built entirely on `globalThis.crypto.getRandomValues` (the Web Crypto API):
  * present in browsers, Web Workers, Deno, Bun, Cloudflare Workers, and Node.js
- * >= 18 — a single isomorphic code path with no Node-only imports, so the bundle
- * stays browser-safe. `Math.random` is never used.
+ * >= 24 — a single isomorphic code path with no Node-only imports, so the bundle
+ * stays browser-safe. (`globalThis.crypto` is a default global only since Node
+ * 19; we require Node >= 24 so the entropy source is unconditionally present.)
+ * `Math.random` is never used.
  */
 
 /** Size of the sampling window: a 16-bit value drawn from two random bytes. */

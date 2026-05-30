@@ -9,6 +9,13 @@ const KNOWN = new Set(ELEMENT_SYMBOLS);
 /**
  * Validate that a token is a concatenation of known element symbols.
  *
+ * This is a syntax gate, not authentication: it confirms the token is
+ * well-formed against the public vocabulary, nothing more. A `true` result
+ * does not mean the token is authorized — verifying that is the caller's job
+ * (look the token up and compare the stored secret in constant time). Because
+ * it only inspects public, syntactic structure, its early return leaks nothing
+ * secret.
+ *
  * Validation is strict and case-sensitive: only canonical chemical casing is
  * accepted (`"FeAu"` is valid; `"feau"` and `"FEAU"` are not). There is no
  * trimming and no checksum — an unknown segment fails before any database

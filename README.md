@@ -40,8 +40,10 @@ floating next to `Fe` is exactly the kind of thing that gets dropped or merged.
 npm install elemental-tokens
 ```
 
-Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 18 and in the browser
-(uses the Web Crypto API via `globalThis.crypto`).
+Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 24 and in the browser
+(uses the Web Crypto API via `globalThis.crypto`). Node 24 is the floor because
+`globalThis.crypto` is only a default global from Node 19 onward; requiring 24
+keeps the entropy source unconditionally present with no flags or polyfills.
 
 ## Quick start
 
@@ -72,14 +74,17 @@ symbol, no modulo bias shaving anything off.
 
 | Option   | Type     | Default | Description                          |
 | -------- | -------- | ------- | ------------------------------------ |
-| `length` | `number` | `5`     | Number of symbols. Positive integer. |
+| `length` | `number` | `5`     | Number of symbols. Integer in `[1, 65536]`. |
 
 ```ts
 generate();              // "MgScPbReNd"
 generate({ length: 8 }); // 8 symbols ≈ 53.6 bits
 ```
 
-Throws `RangeError` if `length` is not a positive integer. The token is a bare
+Throws `RangeError` if `length` is not an integer in `[1, 65536]`. The upper
+bound is a denial-of-service guard so an unbounded or attacker-influenced length
+can't turn one call into an out-of-memory loop; 65536 symbols is already ~439
+kbits, far past any real need. The token is a bare
 concatenation of two-character symbols; if you want a hyphenated form, split it
 yourself: `token.match(/../g).join("-")`.
 
@@ -90,6 +95,12 @@ Returns `true` only if the token is a concatenation of known symbols. Strict and
 checksum. The token is split into fixed-width 2-char chunks, so an empty token,
 a token whose length is not a whole number of symbols, or any chunk that is not
 an element symbol all return `false`.
+
+`validate` is a **syntax gate, not authentication.** A `true` result means the
+token is well-formed against the public vocabulary — not that it is authorized.
+Verifying authorization is the caller's job: look the token up and compare the
+stored secret in constant time. (Because `validate` only inspects public,
+syntactic structure, its early-out leaks nothing secret.)
 
 ```ts
 validate("FeAuRnCuXe"); // true
@@ -130,7 +141,7 @@ short-lived tokens under aggressive rate limiting** — think a token that's val
 for five minutes and gets at most a few dozen guesses before lockout.
 
 - **CSPRNG only.** Randomness comes from `crypto.getRandomValues` (Web Crypto,
-  present in Node ≥ 18 and browsers). `Math.random` is never used.
+  present in Node ≥ 24 and browsers). `Math.random` is never used.
 - **No modulo bias.** Sampling uses rejection sampling over a 16-bit window, so
   each of the 104 symbols is equally likely and the per-symbol entropy really is
   the full 6.7 bits — not "6.7 bits minus a sliver." (The 65536-value
@@ -142,8 +153,8 @@ for five minutes and gets at most a few dozen guesses before lockout.
   or malformed token fails immediately. If you need offline typo detection, use a
   longer token or add your own check digit.
 - **Pick length for your threat model.** The default 33.5 bits is comfortable for
-  rate-limited, short-lived tokens (50 guesses in 5 minutes is ~`50 / 2^33.5` ≈ 1
-  in 170 million per window). It is **not** sized for offline brute force — for
+  rate-limited, short-lived tokens (100 guesses in 5 minutes is ~`100 / 2^33.5` ≈ 1
+  in 121 million per window). It is **not** sized for offline brute force — for
   secrets that must resist that, use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
 ## Comparison to a BIP39 wordlist

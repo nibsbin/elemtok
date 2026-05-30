@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generate } from "../src/generate.js";
 import { validate } from "../src/validate.js";
 import { ELEMENT_SYMBOLS } from "../src/symbols.js";
+import { MAX_LENGTH } from "../src/generate.js";
 
 describe("generate", () => {
   it("produces 5 concatenated canonical symbols by default", () => {
@@ -31,6 +32,16 @@ describe("generate", () => {
     expect(() => generate({ length: 0 })).toThrow(RangeError);
     expect(() => generate({ length: -1 })).toThrow(RangeError);
     expect(() => generate({ length: 1.5 })).toThrow(RangeError);
+    expect(() => generate({ length: NaN })).toThrow(RangeError);
+    expect(() => generate({ length: Infinity })).toThrow(RangeError);
+  });
+
+  it("caps length to guard against unbounded-allocation DoS", () => {
+    // The boundary is allowed; one past it, and the prior unbounded inputs
+    // (e.g. 2**53, which is a valid integer) are rejected without looping.
+    expect(generate({ length: MAX_LENGTH }).length).toBe(MAX_LENGTH * 2);
+    expect(() => generate({ length: MAX_LENGTH + 1 })).toThrow(RangeError);
+    expect(() => generate({ length: 2 ** 53 })).toThrow(RangeError);
   });
 
   it("round-trips through validate", () => {
