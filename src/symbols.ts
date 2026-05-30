@@ -32,14 +32,5 @@ export const ELEMENT_SYMBOLS: readonly string[] = Object.freeze([
   "Og",
 ]);
 
-/** Size of the default vocabulary. 104 — there is no thirteenth period. */
+/** Size of the vocabulary. 104 — there is no thirteenth period. */
 export const SYMBOL_COUNT = ELEMENT_SYMBOLS.length;
-
-/**
- * Entropy contributed by a single symbol: log2(104) ≈ 6.7 bits.
- *
- * Six-point-seven bits is the atomic quantum of this scheme — every symbol you
- * read off a token is worth exactly that much, and a token's strength is just
- * `length × 6.7` bits.
- */
-export const BITS_PER_SYMBOL = Math.log2(SYMBOL_COUNT);

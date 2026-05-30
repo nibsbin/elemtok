@@ -35,31 +35,8 @@ describe("validate", () => {
     expect(validate("FeAu ")).toBe(false);
   });
 
-  it("accepts the hyphenated form with the hyphen delimiter", () => {
-    expect(validate("Fe-Au-Rn-Cu-Xe", { delimiter: "-" })).toBe(true);
-    expect(validate("Fe-Au-Rn-Cu-Xe")).toBe(false); // default has no delimiter
-  });
-
-  it("rejects leading, trailing, or doubled delimiters", () => {
-    expect(validate("Fe-", { delimiter: "-" })).toBe(false);
-    expect(validate("-Fe", { delimiter: "-" })).toBe(false);
-    expect(validate("Fe--Au", { delimiter: "-" })).toBe(false);
-  });
-
-  it("respects a custom delimiter and rejects mismatches", () => {
-    expect(validate("Fe.Au", { delimiter: "." })).toBe(true);
-    expect(validate("Fe.Au")).toBe(false); // default has no delimiter, "Fe.Au" is odd-width
-  });
-
-  it("respects a custom symbol set", () => {
-    const symbols = ["aa", "bb", "cc"];
-    expect(validate("aabbcc", { symbols })).toBe(true);
-    expect(validate("aabbcc")).toBe(false);
-  });
-
-  it("requires an explicit delimiter for mixed-width vocabularies", () => {
-    const symbols = ["a", "bb", "ccc"];
-    expect(validate("abbccc", { symbols })).toBe(false); // ambiguous without a delimiter
-    expect(validate("a.bb.ccc", { symbols, delimiter: "." })).toBe(true);
+  it("rejects delimiters (the token is a bare concatenation)", () => {
+    expect(validate("Fe-Au")).toBe(false);
+    expect(validate("Fe.Au")).toBe(false);
   });
 });

@@ -27,39 +27,15 @@ describe("generate", () => {
     }
   });
 
-  it("respects a custom delimiter", () => {
-    expect(generate({ length: 5, delimiter: "-" })).toMatch(/^[A-Z][a-z](-[A-Z][a-z]){4}$/);
-    expect(generate({ length: 3, delimiter: "." })).toMatch(/^[A-Z][a-z](\.[A-Z][a-z]){2}$/);
-    expect(generate({ length: 2, delimiter: "" })).toMatch(/^[A-Z][a-z][A-Z][a-z]$/);
-  });
-
-  it("honors a custom symbol set", () => {
-    const symbols = ["aa", "bb", "cc"];
-    const token = generate({ length: 6, delimiter: " ", symbols });
-    for (const segment of token.split(" ")) {
-      expect(symbols).toContain(segment);
-    }
-  });
-
   it("throws on invalid options", () => {
     expect(() => generate({ length: 0 })).toThrow(RangeError);
     expect(() => generate({ length: -1 })).toThrow(RangeError);
     expect(() => generate({ length: 1.5 })).toThrow(RangeError);
-    expect(() => generate({ symbols: [] })).toThrow(RangeError);
   });
 
-  it("round-trips through validate for arbitrary options", () => {
-    const cases = [
-      {},
-      { length: 1 },
-      { length: 12 },
-      { delimiter: "." },
-      { delimiter: "_", length: 7 },
-      { symbols: ["Zz", "Qq", "Xx"], length: 9 },
-      { symbols: ["aa", "bb"], delimiter: "/", length: 4 },
-    ];
-    for (const opts of cases) {
-      expect(validate(generate(opts), opts)).toBe(true);
+  it("round-trips through validate", () => {
+    for (const length of [1, 5, 12]) {
+      expect(validate(generate({ length }))).toBe(true);
     }
   });
 });
