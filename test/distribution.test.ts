@@ -5,7 +5,7 @@ import { SYMBOL_COUNT } from "../src/symbols.js";
 /**
  * Integration-level no-bias check: a chi-square goodness-of-fit test on a large
  * sample of real CSPRNG draws. The exact, non-flaky proof of uniformity lives
- * in rng.test.ts (the 256-byte enumeration); this complements it end-to-end.
+ * in rng.test.ts (the 65536-value enumeration); this complements it end-to-end.
  *
  * df = 103. Critical value at alpha = 0.001 is ~149.4, chosen loose so a correct
  * implementation effectively never flakes while a biased one fails reliably.

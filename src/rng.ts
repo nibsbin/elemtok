@@ -7,11 +7,19 @@
  * stays browser-safe. `Math.random` is never used.
  */
 
+/** Size of the sampling window: a 16-bit value drawn from two random bytes. */
+const DRAW_SPACE = 1 << 16; // 65536
+
 /**
- * Read one cryptographically secure random byte.
+ * Read one cryptographically secure 16-bit value in [0, 65536).
+ *
+ * Both bytes come from a single `getRandomValues` call, so each draw costs one
+ * CSPRNG invocation regardless of the rejection-sampling retry rate (which is
+ * vanishingly small at this width — see {@link randomIndexFrom}).
+ *
  * Throws if no secure source is available rather than silently degrading.
  */
-function secureByte(): number {
+function secureUint16(): number {
   const cryptoObj = globalThis.crypto;
   if (!cryptoObj || typeof cryptoObj.getRandomValues !== "function") {
     throw new Error(
@@ -19,34 +27,39 @@ function secureByte(): number {
         "(globalThis.crypto.getRandomValues is required).",
     );
   }
-  const buffer = new Uint8Array(1);
+  const buffer = new Uint8Array(2);
   cryptoObj.getRandomValues(buffer);
-  return buffer[0];
+  return (buffer[0] << 8) | buffer[1];
 }
 
 /**
- * Uniformly sample an integer in [0, n) for 1 <= n <= 256 from an injectable
- * byte source, using rejection sampling. The byte source is injectable so tests
+ * Uniformly sample an integer in [0, n) for 1 <= n <= 65536 from an injectable
+ * 16-bit source, using rejection sampling. The source is injectable so tests
  * can drive it with a deterministic stream and prove the no-bias property
  * exactly.
  *
- * Why rejection sampling: 256 is not a multiple of most n, so a naive `byte % n`
- * over-represents the low residues (modulo bias). We accept only bytes in
- * [0, max), where `max` is the largest multiple of n that fits a byte; within
- * that window every residue class is equally populated. (For n = 104,
- * max = 208, so 48 of the 256 byte values are rejected.)
+ * Why rejection sampling: 65536 is not a multiple of most n, so a naive
+ * `value % n` over-represents the low residues (modulo bias). We accept only
+ * values in [0, max), where `max` is the largest multiple of n that fits the
+ * 16-bit window; within that window every residue class is equally populated.
+ *
+ * Why a 16-bit window: the rejection zone is `65536 - max`, always < n out of
+ * 65536, so the reject rate is at most ~0.4% for any n in range — and just
+ * 16 / 65536 ≈ 0.024% for the 104-symbol vocabulary (max = 65520). Sampling a
+ * single byte instead would reject up to ~50% (48 / 256 ≈ 18.75% at n = 104),
+ * forcing far more resampling for the same result.
  */
-export function randomIndexFrom(n: number, nextByte: () => number): number {
-  if (!Number.isInteger(n) || n < 1 || n > 256) {
+export function randomIndexFrom(n: number, next16: () => number): number {
+  if (!Number.isInteger(n) || n < 1 || n > DRAW_SPACE) {
     throw new RangeError(
-      `elemental-tokens: n must be an integer in [1, 256], got ${n}`,
+      `elemental-tokens: n must be an integer in [1, ${DRAW_SPACE}], got ${n}`,
     );
   }
 
-  const max = Math.floor(256 / n) * n;
+  const max = Math.floor(DRAW_SPACE / n) * n;
   for (;;) {
-    const b = nextByte();
-    if (b < max) return b % n;
+    const v = next16();
+    if (v < max) return v % n;
     // otherwise reject and resample
   }
 }
@@ -56,5 +69,5 @@ export function randomIndexFrom(n: number, nextByte: () => number): number {
  * modulo bias.
  */
 export function randomIndex(n: number): number {
-  return randomIndexFrom(n, secureByte);
+  return randomIndexFrom(n, secureUint16);
 }
