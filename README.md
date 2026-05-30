@@ -82,9 +82,9 @@ generate({ length: 8 }); // 8 symbols ≈ 53.6 bits
 ```
 
 Throws `RangeError` if `length` is not an integer in `[1, 65536]`. The upper
-bound (`MAX_LENGTH`) is a denial-of-service guard so an unbounded or
-attacker-influenced length can't turn one call into an out-of-memory loop;
-65536 symbols is already ~439 kbits, far past any real need. The token is a bare
+bound is a denial-of-service guard so an unbounded or attacker-influenced length
+can't turn one call into an out-of-memory loop; 65536 symbols is already ~439
+kbits, far past any real need. The token is a bare
 concatenation of two-character symbols; if you want a hyphenated form, split it
 yourself: `token.match(/../g).join("-")`.
 
@@ -112,11 +112,10 @@ validate("Fe-Au");      // false  (no delimiters)
 ### Exported constants
 
 ```ts
-import { ELEMENT_SYMBOLS, SYMBOL_COUNT, MAX_LENGTH } from "elemental-tokens";
+import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "elemental-tokens";
 
 SYMBOL_COUNT;          // 104
 ELEMENT_SYMBOLS[0];    // "He"
-MAX_LENGTH;            // 65536  (generate length cap)
 ```
 
 ## Entropy math

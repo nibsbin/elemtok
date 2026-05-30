@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { generate } from "../src/generate.js";
 import { validate } from "../src/validate.js";
 import { ELEMENT_SYMBOLS } from "../src/symbols.js";
-import { MAX_LENGTH } from "../src/types.js";
+import { MAX_LENGTH } from "../src/generate.js";
 
 describe("generate", () => {
   it("produces 5 concatenated canonical symbols by default", () => {
