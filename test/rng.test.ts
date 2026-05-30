@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { randomIndex, randomIndexFrom } from "../src/rng.js";
 
-/** Build a byte source that yields the given bytes in order, then throws. */
-function bytesFrom(...values: number[]): () => number {
+/** Build a 16-bit source that yields the given values in order, then throws. */
+function wordsFrom(...values: number[]): () => number {
   let i = 0;
   return () => {
-    if (i >= values.length) throw new Error("byte source exhausted");
+    if (i >= values.length) throw new Error("word source exhausted");
     return values[i++];
   };
 }
@@ -26,36 +26,36 @@ describe("randomIndex", () => {
     expect(() => randomIndex(0)).toThrow(RangeError);
     expect(() => randomIndex(-5)).toThrow(RangeError);
     expect(() => randomIndex(2.5)).toThrow(RangeError);
-    expect(() => randomIndex(257)).toThrow(RangeError);
+    expect(() => randomIndex(65537)).toThrow(RangeError);
   });
 });
 
 describe("randomIndexFrom rejection sampling", () => {
-  it("skips bytes in the reject zone and uses the next accepted byte", () => {
-    // For n=104, max=208: bytes >= 208 are rejected.
-    const src = bytesFrom(250, 5); // 250 rejected, 5 accepted -> 5 % 104
+  it("skips values in the reject zone and uses the next accepted value", () => {
+    // For n=104, max=65520: values >= 65520 are rejected.
+    const src = wordsFrom(65530, 5); // 65530 rejected, 5 accepted -> 5 % 104
     expect(randomIndexFrom(104, src)).toBe(5);
   });
 
-  it("maps an accepted byte via modulo", () => {
-    // 150 < 208, so 150 % 104 = 46.
-    expect(randomIndexFrom(104, bytesFrom(150))).toBe(46);
+  it("maps an accepted value via modulo", () => {
+    // 150 < 65520, so 150 % 104 = 46.
+    expect(randomIndexFrom(104, wordsFrom(150))).toBe(46);
   });
 
-  it("is provably unbiased: enumerating all 256 bytes hits each index exactly twice", () => {
+  it("is provably unbiased: enumerating all 65536 values hits each index exactly 630 times", () => {
     const counts = new Array(104).fill(0);
     let rejected = 0;
-    for (let b = 0; b < 256; b++) {
-      if (b >= 208) {
-        // The reject zone: feeding only this byte must throw (exhausted source),
-        // proving it is never accepted.
-        expect(() => randomIndexFrom(104, bytesFrom(b))).toThrow();
+    for (let v = 0; v < 65536; v++) {
+      if (v >= 65520) {
+        // The reject zone: feeding only this value must throw (exhausted
+        // source), proving it is never accepted.
+        expect(() => randomIndexFrom(104, wordsFrom(v))).toThrow();
         rejected++;
         continue;
       }
-      counts[randomIndexFrom(104, bytesFrom(b))]++;
+      counts[randomIndexFrom(104, wordsFrom(v))]++;
     }
-    expect(rejected).toBe(48); // 256 - 208
-    for (const c of counts) expect(c).toBe(2);
+    expect(rejected).toBe(16); // 65536 - 65520
+    for (const c of counts) expect(c).toBe(630); // 65520 / 104
   });
 });
