@@ -22,15 +22,27 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
 
-      # Trusted publishing requires npm >= 11.5.1.
-      - run: npm install -g npm@latest
+      # Trusted publishing requires npm >= 11.5.1; pin it for a reproducible
+      # publish toolchain instead of tracking @latest.
+      - run: npm install -g npm@11.5.1
+
+      # Refuse to publish if the release tag and package.json version disagree.
+      - name: Verify tag matches package.json version
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          PKG_VERSION="v$(node -p "require('./package.json').version")"
+          if [ "$PKG_VERSION" != "$REF_NAME" ]; then
+            echo "Release tag '$REF_NAME' does not match package.json version '$PKG_VERSION'" >&2
+            exit 1
+          fi
 
       - run: npm ci
 

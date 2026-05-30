@@ -3,13 +3,29 @@
  *
  * Built entirely on `globalThis.crypto.getRandomValues` (the Web Crypto API):
  * present in browsers, Web Workers, Deno, Bun, Cloudflare Workers, and Node.js
- * >= 18 — a single isomorphic code path with no Node-only imports, so the bundle
- * stays browser-safe. `Math.random` is never used.
+ * >= 24 — a single isomorphic code path with no Node-only imports, so the bundle
+ * stays browser-safe. (`globalThis.crypto` is a default global only since Node
+ * 19; we require Node >= 24 so the entropy source is unconditionally present.)
+ * `Math.random` is never used.
  */
+
+/** Size of the entropy pool refilled per `getRandomValues` call. */
+const POOL_SIZE = 256;
+
+/**
+ * Buffer of pre-drawn CSPRNG bytes, consumed front-to-back and refilled. Starts
+ * empty (length 0) so the first read triggers an allocate-and-fill.
+ */
+let pool = new Uint8Array(0);
+let poolPos = 0;
 
 /**
  * Read one cryptographically secure random byte.
- * Throws if no secure source is available rather than silently degrading.
+ *
+ * Bytes are drawn from the platform CSPRNG in pooled batches rather than one
+ * `getRandomValues` call per byte — the bytes are still independent and secure,
+ * this just avoids a syscall per draw under rejection sampling. Throws if no
+ * secure source is available rather than silently degrading.
  */
 function secureByte(): number {
   const cryptoObj = globalThis.crypto;
@@ -19,9 +35,12 @@ function secureByte(): number {
         "(globalThis.crypto.getRandomValues is required).",
     );
   }
-  const buffer = new Uint8Array(1);
-  cryptoObj.getRandomValues(buffer);
-  return buffer[0];
+  if (poolPos >= pool.length) {
+    if (pool.length !== POOL_SIZE) pool = new Uint8Array(POOL_SIZE);
+    cryptoObj.getRandomValues(pool);
+    poolPos = 0;
+  }
+  return pool[poolPos++];
 }
 
 /**

@@ -4,10 +4,10 @@ export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm", "cjs"],
   dts: true,
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   treeshake: true,
-  target: "node18",
+  target: "node24",
   outExtension({ format }) {
     return { js: format === "esm" ? ".mjs" : ".cjs" };
   },

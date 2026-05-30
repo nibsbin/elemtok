@@ -40,8 +40,10 @@ floating next to `Fe` is exactly the kind of thing that gets dropped or merged.
 npm install elemental-tokens
 ```
 
-Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 18 and in the browser
-(uses the Web Crypto API via `globalThis.crypto`).
+Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 24 and in the browser
+(uses the Web Crypto API via `globalThis.crypto`). Node 24 is the floor because
+`globalThis.crypto` is only a default global from Node 19 onward; requiring 24
+keeps the entropy source unconditionally present with no flags or polyfills.
 
 ## Quick start
 
@@ -79,7 +81,10 @@ generate();              // "MgScPbReNd"
 generate({ length: 8 }); // 8 symbols ≈ 53.6 bits
 ```
 
-Throws `RangeError` if `length` is not a positive integer. The token is a bare
+Throws `RangeError` if `length` is not an integer in `[1, 65536]`. The upper
+bound (`MAX_LENGTH`) is a denial-of-service guard so an unbounded or
+attacker-influenced length can't turn one call into an out-of-memory loop;
+65536 symbols is already ~439 kbits, far past any real need. The token is a bare
 concatenation of two-character symbols; if you want a hyphenated form, split it
 yourself: `token.match(/../g).join("-")`.
 
@@ -91,6 +96,12 @@ checksum. The token is split into fixed-width 2-char chunks, so an empty token,
 a token whose length is not a whole number of symbols, or any chunk that is not
 an element symbol all return `false`.
 
+`validate` is a **syntax gate, not authentication.** A `true` result means the
+token is well-formed against the public vocabulary — not that it is authorized.
+Verifying authorization is the caller's job: look the token up and compare the
+stored secret in constant time. (Because `validate` only inspects public,
+syntactic structure, its early-out leaks nothing secret.)
+
 ```ts
 validate("FeAuRnCuXe"); // true
 validate("feaurncuxe"); // false  (case-sensitive)
@@ -101,10 +112,11 @@ validate("Fe-Au");      // false  (no delimiters)
 ### Exported constants
 
 ```ts
-import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "elemental-tokens";
+import { ELEMENT_SYMBOLS, SYMBOL_COUNT, MAX_LENGTH } from "elemental-tokens";
 
 SYMBOL_COUNT;          // 104
 ELEMENT_SYMBOLS[0];    // "He"
+MAX_LENGTH;            // 65536  (generate length cap)
 ```
 
 ## Entropy math
@@ -130,7 +142,7 @@ short-lived tokens under aggressive rate limiting** — think a token that's val
 for five minutes and gets at most a few dozen guesses before lockout.
 
 - **CSPRNG only.** Randomness comes from `crypto.getRandomValues` (Web Crypto,
-  present in Node ≥ 18 and browsers). `Math.random` is never used.
+  present in Node ≥ 24 and browsers). `Math.random` is never used.
 - **No modulo bias.** Sampling uses rejection sampling, so each of the 104
   symbols is equally likely and the per-symbol entropy really is the full 6.7
   bits — not "6.7 bits minus a sliver." (The 256-byte enumeration test proves
