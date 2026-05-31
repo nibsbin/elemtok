@@ -121,6 +121,12 @@ picking a strength:
 
 To hit a target strength, divide by 6.7: 128 bits ÷ 6.7 ≈ 20 symbols.
 
+The closest well-known relative is a BIP39 wordlist — also a fixed vocabulary
+mapped to entropy. BIP39 packs more per unit (2048 words, 11 bits each) and adds
+a checksum; elemtok trades that for shorter two-character atoms with no
+dictionary-autocorrect risk, faster to read aloud and stable through an LLM, at
+6.7 bits each.
+
 ## Threat model
 
 `elemtok` is built for **security-load-bearing identifiers under aggressive rate
