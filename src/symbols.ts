@@ -1,17 +1,18 @@
 /**
  * The closed vocabulary for elemtok.
  *
- * These are the 104 two-letter IUPAC element symbols (elements 1–118), in
- * canonical chemical casing (uppercase-first). Short, title-cased, and
- * frequent in chemistry training text, each symbol is often encoded as a
- * single BPE token by LLM tokenizers — giving predictable LLM token cost and
- * reliable round-trip transcription. All 14 single-letter symbols
- * — H, B, C, N, O, F, P, S, K, V, W, Y, I, U — are deliberately excluded:
- * uniform two-character width provides positional anchors for LLMs and removes
- * the fragmentation and drop/merge errors that single-character symbols invite.
+ * The 104 two-letter IUPAC element symbols (elements 1–118), canonical casing.
  *
- * The list is public and fixed. Observing tokens teaches an attacker nothing
- * about the token space — the whole space is the periodic table.
+ * Two-letter title-cased strings appear densely in chemistry training data and
+ * are typically encoded as single BPE tokens by major LLM tokenizers. This
+ * means an N-symbol token costs N LLM tokens and the model processes each
+ * symbol as an atomic unit, reducing transcription errors.
+ *
+ * The 14 single-letter symbols (H, B, C, N, O, F, P, S, K, V, W, Y, I, U)
+ * are excluded. Mixed-width tokens break positional uniformity and cause
+ * inconsistent tokenization at symbol boundaries.
+ *
+ * The vocabulary is public and fixed; the search space is always 104^length.
  */
 export const ELEMENT_SYMBOLS: readonly string[] = Object.freeze([
   // Period 1–3
