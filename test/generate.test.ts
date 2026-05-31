@@ -5,10 +5,10 @@ import { ELEMENT_SYMBOLS } from "../src/symbols.js";
 import { MAX_LENGTH } from "../src/generate.js";
 
 describe("generate", () => {
-  it("produces 5 concatenated canonical symbols by default", () => {
+  it("produces 10 concatenated canonical symbols by default", () => {
     for (let i = 0; i < 200; i++) {
       const token = generate();
-      expect(token).toMatch(/^([A-Z][a-z]){5}$/);
+      expect(token).toMatch(/^([A-Z][a-z]){10}$/);
     }
   });
 

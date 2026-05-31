@@ -1,15 +1,15 @@
 /**
  * The closed vocabulary for elemtok.
  *
- * These are the 104 two-letter IUPAC element symbols (elements 1–118), in
- * canonical chemical casing (uppercase-first). All 14 single-letter symbols
- * — H, B, C, N, O, F, P, S, K, V, W, Y, I, U — are deliberately excluded:
- * uniform two-character width gives a transcriber (human or LLM) a positional
- * anchor and removes the dropping/merging errors that single-character symbols
- * invite.
+ * The 104 two-letter IUPAC element symbols (elements 1–118), canonical casing.
  *
- * The list is public and fixed. Observing tokens teaches an attacker nothing
- * about the token space — the whole space is the periodic table.
+ * Element symbols appear extensively in LLM training data and form a closed,
+ * formally defined set, which means models learn the full inventory and
+ * reproduce symbols accurately. The 14 single-letter symbols
+ * (H, B, C, N, O, F, P, S, K, V, W, Y, I, U) are excluded; mixed-width
+ * tokens break positional uniformity and introduce boundary ambiguity.
+ *
+ * The vocabulary is public and fixed; the search space is always 104^length.
  */
 export const ELEMENT_SYMBOLS: readonly string[] = Object.freeze([
   // Period 1–3

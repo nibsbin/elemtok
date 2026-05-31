@@ -1,8 +1,8 @@
 import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "./symbols.js";
 import { randomIndex } from "./rng.js";
 
-/** Default number of symbols in a token: 5 symbols ≈ 33.5 bits of entropy. */
-const DEFAULT_LENGTH = 5;
+/** Default number of symbols in a token: 10 symbols ≈ 67 bits of entropy. */
+const DEFAULT_LENGTH = 10;
 
 /**
  * Maximum number of symbols in a token (2^16). A defensive upper bound so an
@@ -15,14 +15,14 @@ export const MAX_LENGTH = 65536;
 
 /** Options for {@link generate}. */
 export interface GenerateOptions {
-  /** Number of symbols in the token. Default 5. Must be an integer in `[1, 65536]`. */
+  /** Number of symbols in the token. Default 10. Must be an integer in `[1, 65536]`. */
   length?: number;
 }
 
 /**
  * Generate a token from element symbols.
  *
- * Returns `length` symbols (default 5) concatenated with no delimiter, e.g.
+ * Returns `length` symbols (default 10) concatenated with no delimiter, e.g.
  * `"FeAuRnCuXe"`. Each symbol is drawn uniformly from the 104-symbol vocabulary
  * using a CSPRNG with rejection sampling, contributing ~6.7 bits of entropy.
  *
