@@ -1,4 +1,4 @@
-# elemental-tokens
+# elemtok
 
 **Human-transcribable, LLM-stable tokens built from chemical element symbols.**
 
@@ -37,7 +37,7 @@ floating next to `Fe` is exactly the kind of thing that gets dropped or merged.
 ## Install
 
 ```bash
-npm install elemental-tokens
+npm install elemtok
 ```
 
 Ships ESM + CommonJS + TypeScript types. Runs on Node.js ≥ 24 and in the browser
@@ -48,7 +48,7 @@ keeps the entropy source unconditionally present with no flags or polyfills.
 ## Quick start
 
 ```ts
-import { generate, validate } from "elemental-tokens";
+import { generate, validate } from "elemtok";
 
 const token = generate();        // "FeAuRnCuXe"
 validate(token);                 // true
@@ -61,7 +61,7 @@ generate({ length: 8 });         // 8 symbols ≈ 53.6 bits
 CommonJS:
 
 ```js
-const { generate, validate } = require("elemental-tokens");
+const { generate, validate } = require("elemtok");
 ```
 
 ## API
@@ -112,7 +112,7 @@ validate("Fe-Au");      // false  (no delimiters)
 ### Exported constants
 
 ```ts
-import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "elemental-tokens";
+import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "elemtok";
 
 SYMBOL_COUNT;          // 104
 ELEMENT_SYMBOLS[0];    // "He"
@@ -136,7 +136,7 @@ To hit a target strength, divide by 6.7: 128 bits ÷ 6.7 ≈ 20 symbols.
 
 ## Threat model
 
-`elemental-tokens` is designed as a **security-load-bearing identifier for
+`elemtok` is designed as a **security-load-bearing identifier for
 short-lived tokens under aggressive rate limiting** — think a token that's valid
 for five minutes and gets at most a few dozen guesses before lockout.
 
@@ -161,7 +161,7 @@ for five minutes and gets at most a few dozen guesses before lockout.
 
 BIP39 is the closest well-known relative: a fixed vocabulary mapped to entropy.
 
-|                          | BIP39                        | elemental-tokens                  |
+|                          | BIP39                        | elemtok                           |
 | ------------------------ | ---------------------------- | --------------------------------- |
 | Vocabulary size          | 2048 words                   | 104 symbols                       |
 | Entropy per unit         | 11 bits/word                 | **6.7 bits/symbol**               |
@@ -172,7 +172,7 @@ BIP39 is the closest well-known relative: a fixed vocabulary mapped to entropy.
 | Autocorrect risk         | high (real English words)    | low (not dictionary words)        |
 
 BIP39 trades shorter sequences for a much larger, English-word vocabulary and a
-checksum. `elemental-tokens` trades that for shorter, two-character atoms that are
+checksum. `elemtok` trades that for shorter, two-character atoms that are
 faster to read aloud, internationally recognizable, and stable through an LLM —
 at a tidy 6.7 bits each.
 
@@ -181,7 +181,7 @@ at a tidy 6.7 bits each.
 Types ship with the package:
 
 ```ts
-import { generate, type GenerateOptions } from "elemental-tokens";
+import { generate, type GenerateOptions } from "elemtok";
 
 const opts: GenerateOptions = { length: 8 };
 const token = generate(opts);

@@ -1,5 +1,5 @@
 /**
- * The closed vocabulary for elemental-tokens.
+ * The closed vocabulary for elemtok.
  *
  * These are the 104 two-letter IUPAC element symbols (elements 1–118), in
  * canonical chemical casing (uppercase-first). All 14 single-letter symbols
