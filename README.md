@@ -119,8 +119,7 @@ Rate-limited, short-lived identifiers. Not intended for offline-attack scenarios
 - Randomness from `crypto.getRandomValues`; `Math.random` is never used.
 - Rejection sampling over a 16-bit window; no modulo bias; all 104 symbols
   equiprobable. Search space is `104^length`.
-- No checksum. The database lookup is the validity check. For offline typo
-  detection, increase length or add a check digit externally.
+- No checksum. The database lookup is the validity check.
 - Default (length 10, ≈ 67 bits) is sized for rate-limited tokens. For
   offline-attack resistance use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
