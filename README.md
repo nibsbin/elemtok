@@ -1,42 +1,44 @@
 # elemtok
 
-**Human-transcribable, LLM-stable tokens built from chemical element symbols.**
+**LLM-transcribable tokens built from chemical element symbols.**
 
 ```
-FeAuRnCuXe
+FeAuRnCuXeNdCsPbBiTh
 ```
 
-Five symbols off the periodic table: easy to read aloud, type, or have a
-language model echo back unmangled — and drawn from a cryptographically secure
-RNG. Each symbol carries a clean **6.7 bits** of entropy, so a token is worth
-`length × 6.7` bits with nothing to memorize.
+Element symbols are LLM-tokenizer-native. Most BPE tokenizers (GPT, Claude,
+Llama) encode each two-letter symbol as a **single token**, so a 10-symbol
+elemtok costs exactly 10 LLM tokens — no fragmentation, no merging. That 1-for-1
+mapping makes transcription reliable and token usage predictable, unlike random
+strings where `q7f2k9` may encode as 4–7 tokens and emerge subtly mangled. Each
+symbol carries a clean **6.7 bits** of entropy, drawn from a CSPRNG.
 
 ## Why element symbols?
 
-A good short identifier has to survive being spoken, typed, dictated to a phone,
-or round-tripped through an LLM. Random base32 (`q7f2k9`) and UUIDs fail that
-test: `l`/`1`/`I` and `0`/`O` collide, and a model has no prior for an arbitrary
-string. Element symbols are different:
+LLMs process text by first breaking it into tokens. Random identifiers like
+`q7f2k9` or UUIDs tokenize unpredictably — the same string may fragment
+differently across model versions or surrounding context. Element symbols don't
+have this problem:
 
-- **A closed, formally specified set.** No synonyms, no spelling variants, no
-  "correct" value a model would rather emit. `Rn` means `Rn`.
+- **1-for-1 LLM tokenization.** Short, title-cased, and saturated in chemistry
+  training text, two-letter element symbols are often encoded as a single BPE
+  token each. A 10-symbol elemtok is typically 10 LLM tokens — predictable
+  cost, no character-level splitting that causes silent drop or duplication.
 - **Strong LLM priors.** The periodic table is learned as a single complete
   artifact — superheavy elements included — so a model reproduces symbols
   reliably and flags typos against a vocabulary it already knows.
-- **Tokenizer-stable.** Short, title-cased, and frequent in training text,
-  element symbols get encoded by BPE tokenizers as stable whole units rather
-  than scattered byte fragments. That round-trip is lossless and consistent, so
-  a model echoing a token back doesn't shed or duplicate characters the way it
-  can with a random string like `q7f2k9`.
+- **A closed, formally specified set.** No synonyms, no spelling variants, no
+  "correct" value a model would rather emit. `Rn` means `Rn`.
 - **Invalid symbols are detectable before any lookup.** `Xx` is simply not an
   element.
 - **Uniform two-character width.** Every symbol is exactly two characters,
-  giving a transcriber positional anchors and removing drop/merge errors.
+  providing positional anchors that prevent the drop/merge errors common with
+  mixed-width identifiers.
 
 The vocabulary is the **104 two-letter symbols** only. All 14 single-letter
 symbols (H, B, C, N, O, F, P, S, K, V, W, Y, I, U) are excluded — a lone `C`
-next to `Fe` is exactly what gets dropped or merged. 104 symbols is
-`log2(104) ≈ 6.7` bits apiece.
+next to `Fe` is what gets fragmented by tokenizers and dropped or merged by
+models. 104 symbols = `log2(104) ≈ 6.7` bits apiece.
 
 ## Install
 
@@ -44,7 +46,7 @@ next to `Fe` is exactly what gets dropped or merged. 104 symbols is
 npm install elemtok
 ```
 
-Ships ESM + CommonJS + TypeScript types. Requires Node.js ≥ 24 or any modern
+Ships ESM + CommonJS + TypeScript types. Requires Node.js ≥ 22 or any modern
 browser; entropy comes from the Web Crypto API (`globalThis.crypto`).
 
 ## Quick start
@@ -52,7 +54,7 @@ browser; entropy comes from the Web Crypto API (`globalThis.crypto`).
 ```ts
 import { generate, validate } from "elemtok";
 
-const token = generate();        // "FeAuRnCuXe"
+const token = generate();        // "FeAuRnCuXeNdCsPbBiTh"
 validate(token);                 // true
 validate("feaurncuxe");          // false  (case-sensitive)
 validate("XxAuRnCuXe");          // false  (Xx is not an element)
@@ -71,10 +73,10 @@ rejection sampling — the full 6.7 bits per symbol, no modulo bias.
 
 | Option   | Type     | Default | Description                                  |
 | -------- | -------- | ------- | -------------------------------------------- |
-| `length` | `number` | `5`     | Number of symbols. Integer in `[1, 65536]`.  |
+| `length` | `number` | `10`    | Number of symbols. Integer in `[1, 65536]`.  |
 
 ```ts
-generate();              // "MgScPbReNd"
+generate();              // "FeAuRnCuXeNdCsPbBiTh"
 generate({ length: 8 }); // 8 symbols ≈ 53.6 bits
 ```
 
@@ -107,25 +109,26 @@ The vocabulary itself is exported as `ELEMENT_SYMBOLS` (and `SYMBOL_COUNT`, 104)
 
 ## Entropy math
 
-The unit of account is one symbol = `log2(104) ≈ 6.7 bits`. Picking a length is
-picking a strength:
+The unit of account is one symbol = `log2(104) ≈ 6.7 bits`. Because element
+symbols are often tokenized 1-for-1, LLM token cost equals symbol count —
+picking a length sets both entropy and LLM overhead in one decision:
 
-| Length | Entropy        | Notes                          |
-| ------ | -------------- | ------------------------------ |
-| 4      | ≈ 26.8 bits    |                                |
-| **5**  | **≈ 33.5 bits**| default — `5 × 6.7`            |
-| 6      | ≈ 40.2 bits    |                                |
-| 8      | ≈ 53.6 bits    |                                |
-| 12     | ≈ 80.4 bits    |                                |
-| 20     | ≈ 134 bits     | ~128-bit-class secret          |
+| Length | Entropy        | LLM tokens (typical) | Notes                          |
+| ------ | -------------- | -------------------- | ------------------------------ |
+| 4      | ≈ 26.8 bits    | 4                    |                                |
+| 6      | ≈ 40.2 bits    | 6                    |                                |
+| 8      | ≈ 53.6 bits    | 8                    |                                |
+| **10** | **≈ 67.1 bits**| **10**               | default — `10 × 6.7`           |
+| 12     | ≈ 80.4 bits    | 12                   |                                |
+| 20     | ≈ 134 bits     | 20                   | ~128-bit-class secret          |
 
 To hit a target strength, divide by 6.7: 128 bits ÷ 6.7 ≈ 20 symbols.
 
 The closest well-known relative is a BIP39 wordlist — also a fixed vocabulary
-mapped to entropy. BIP39 packs more per unit (2048 words, 11 bits each) and adds
-a checksum; elemtok trades that for shorter two-character atoms with no
-dictionary-autocorrect risk, faster to read aloud and stable through an LLM, at
-6.7 bits each.
+mapped to entropy. BIP39 packs more bits per unit (2048 words, 11 bits each) and
+adds a checksum; elemtok trades that for two-character atoms that are often a
+single LLM token each, making them stable and cheap to round-trip through a
+model.
 
 ## Threat model
 
@@ -142,10 +145,9 @@ guesses before lockout.
 - **No checksum, by design.** The database lookup is the error check — unknown or
   malformed tokens fail immediately. Need offline typo detection? Use a longer
   token or add your own check digit.
-- **Pick length for your threat model.** The default 33.5 bits is comfortable for
-  rate-limited, short-lived tokens (~100 guesses in 5 minutes is ≈ 1 in 121
-  million per window). It is **not** sized for offline brute force — for that use
-  length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
+- **Pick length for your threat model.** The default 67.1 bits is comfortable for
+  rate-limited, short-lived tokens. It is **not** sized for offline brute force —
+  for that use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
 ## License
 
