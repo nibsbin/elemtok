@@ -1,7 +1,7 @@
 import { ELEMENT_SYMBOLS, SYMBOL_COUNT } from "./symbols.js";
 import { randomIndex } from "./rng.js";
 
-/** Default number of symbols in a token: 10 symbols ≈ 67.0 bits of entropy. */
+/** Default number of symbols in a token: 10 symbols ≈ 67 bits of entropy. */
 const DEFAULT_LENGTH = 10;
 
 /**

@@ -102,9 +102,9 @@ One symbol = `log2(104) ≈ 6.7 bits`.
 | 4      | ≈ 26.8 bits     |
 | 6      | ≈ 40.2 bits     |
 | 8      | ≈ 53.6 bits     |
-| **10** | **≈ 67.0 bits** (default) |
+| **10** | **≈ 67 bits** (default) |
 | 12     | ≈ 80.4 bits     |
-| 20     | ≈ 134.0 bits    |
+| 20     | ≈ 134 bits    |
 
 Target entropy ÷ 6.7 = required length (e.g. 128 bits → 20 symbols).
 
@@ -121,7 +121,7 @@ Rate-limited, short-lived identifiers. Not intended for offline-attack scenarios
   equiprobable. Search space is `104^length`.
 - No checksum. The database lookup is the validity check. For offline typo
   detection, increase length or add a check digit externally.
-- Default (length 10, ≈ 67.0 bits) is sized for rate-limited tokens. For
+- Default (length 10, ≈ 67 bits) is sized for rate-limited tokens. For
   offline-attack resistance use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
 ## License
