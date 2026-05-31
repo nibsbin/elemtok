@@ -3,14 +3,11 @@
  *
  * The 104 two-letter IUPAC element symbols (elements 1–118), canonical casing.
  *
- * Two-letter title-cased strings appear densely in chemistry training data and
- * are typically encoded as single BPE tokens by major LLM tokenizers. This
- * means an N-symbol token costs N LLM tokens and the model processes each
- * symbol as an atomic unit, reducing transcription errors.
- *
- * The 14 single-letter symbols (H, B, C, N, O, F, P, S, K, V, W, Y, I, U)
- * are excluded. Mixed-width tokens break positional uniformity and cause
- * inconsistent tokenization at symbol boundaries.
+ * Element symbols appear extensively in LLM training data and form a closed,
+ * formally defined set, which means models learn the full inventory and
+ * reproduce symbols accurately. The 14 single-letter symbols
+ * (H, B, C, N, O, F, P, S, K, V, W, Y, I, U) are excluded; mixed-width
+ * tokens break positional uniformity and introduce boundary ambiguity.
  *
  * The vocabulary is public and fixed; the search space is always 104^length.
  */

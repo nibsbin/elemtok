@@ -6,19 +6,18 @@ Tokens built from chemical element symbols, designed for use in LLM contexts.
 FeAuRnCuXeNdCsPbBiTh
 ```
 
-Two-letter element symbols are frequently encoded as single BPE tokens by major
-tokenizers (GPT, Claude, Llama), because they appear densely in chemistry
-training text. An N-symbol elemtok is typically N LLM tokens. The model sees
-each symbol as an atomic unit rather than a character sequence, which is why
-LLMs transcribe them accurately. Each symbol contributes `log2(104) ≈ 6.7 bits`
-of CSPRNG entropy.
+Element symbols are a closed, formally defined set that appears extensively in
+LLM training data — chemistry textbooks, papers, Wikipedia, the periodic table
+itself. Models learn the full inventory, which means they reproduce symbols
+accurately and can identify invalid ones without a lookup. Each symbol
+contributes `log2(104) ≈ 6.7 bits` of CSPRNG entropy.
 
 ## Design
 
 **Vocabulary:** 104 two-letter IUPAC element symbols (elements 1–118, canonical
 casing). The 14 single-letter symbols (H, B, C, N, O, F, P, S, K, V, W, Y, I,
-U) are excluded. Mixed-width identifiers break uniform positional structure:
-a lone `C` adjacent to `Fe` tokenizes inconsistently and is where LLM
+U) are excluded. Mixed-width identifiers break uniform positional structure and
+introduce boundary ambiguity; a lone `C` adjacent to `Fe` is where LLM
 transcription errors occur.
 
 **Entropy:** Each symbol is drawn uniformly via rejection sampling over a 16-bit
@@ -94,26 +93,24 @@ validate("Fe-Au");      // false  (no delimiters)
 
 `ELEMENT_SYMBOLS` (string array) and `SYMBOL_COUNT` (104) are also exported.
 
-## Entropy and LLM token cost
+## Entropy
 
-One symbol = `log2(104) ≈ 6.7 bits`. When tokenization is 1-for-1, symbol
-count equals LLM token count, so length controls both entropy and context cost:
+One symbol = `log2(104) ≈ 6.7 bits`.
 
-| Length | Entropy     | LLM tokens (typical) |
-| ------ | ----------- | -------------------- |
-| 4      | ≈ 26.8 bits | 4                    |
-| 6      | ≈ 40.2 bits | 6                    |
-| 8      | ≈ 53.6 bits | 8                    |
-| **10** | **≈ 67.1 bits** | **10** (default)  |
-| 12     | ≈ 80.4 bits | 12                   |
-| 20     | ≈ 134 bits  | 20                   |
+| Length | Entropy         |
+| ------ | --------------- |
+| 4      | ≈ 26.8 bits     |
+| 6      | ≈ 40.2 bits     |
+| 8      | ≈ 53.6 bits     |
+| **10** | **≈ 67.0 bits** (default) |
+| 12     | ≈ 80.4 bits     |
+| 20     | ≈ 134.0 bits    |
 
 Target entropy ÷ 6.7 = required length (e.g. 128 bits → 20 symbols).
 
 Compared to BIP39: BIP39 yields 11 bits per word from a 2048-word vocabulary
 and includes a checksum. elemtok yields 6.7 bits per two-character atom with
-no checksum. The tradeoff is entropy density vs. the per-atom LLM tokenizer
-stability that two-character symbols provide.
+no checksum.
 
 ## Threat model
 
@@ -124,7 +121,7 @@ Rate-limited, short-lived identifiers. Not intended for offline-attack scenarios
   equiprobable. Search space is `104^length`.
 - No checksum. The database lookup is the validity check. For offline typo
   detection, increase length or add a check digit externally.
-- Default (length 10, ≈ 67.1 bits) is sized for rate-limited tokens. For
+- Default (length 10, ≈ 67.0 bits) is sized for rate-limited tokens. For
   offline-attack resistance use length ≥ 12 (≈ 80 bits) or ≥ 20 (≈ 128 bits).
 
 ## License
