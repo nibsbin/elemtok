@@ -74,55 +74,15 @@ Tokens are a bare concatenation; split if needed: `token.match(/../g).join("-")`
 
 ### `generateFrom(next16, options?): string`
 
-The seam `generate` is built on. `generate(options)` is exactly
-`generateFrom(secureUint16, options)`; this variant lets you supply the entropy
-yourself, for **deterministic derivation** — a stable token from a hash digest,
-a UUID, or a row id rather than fresh randomness.
-
-`next16` is a function returning one integer in `[0, 65536)` per call (two bytes
-of a 16-bit value). Each symbol is drawn with the same rejection sampling as
-`generate`, so the no-modulo-bias guarantee holds for any source. elemtok has no
-opinion on which hash you use or what the seed means — it only maps a uniform
-16-bit stream to symbols.
-
-```ts
-import { createHash } from "node:crypto";
-import { generateFrom } from "elemtok";
-
-// Expand a seed into an inexhaustible 16-bit stream via counter-mode hashing.
-function streamFrom(seed: string): () => number {
-  let counter = 0;
-  let buf = Buffer.alloc(0);
-  let pos = 0;
-  return () => {
-    if (pos + 2 > buf.length) {
-      const ctr = Buffer.from([counter & 0xff, (counter >> 8) & 0xff]);
-      buf = createHash("sha256").update(seed).update(ctr).digest();
-      counter++;
-      pos = 0;
-    }
-    const v = (buf[pos] << 8) | buf[pos + 1];
-    pos += 2;
-    return v;
-  };
-}
-
-const token = generateFrom(streamFrom("user:42"), { length: 10 });
-// same seed -> same token, every time
-```
-
-**`next16` must not run dry.** Rejection sampling resamples on the rare reject
-(~0.024% per draw for 104 symbols), so the number of calls per token is variable
-and, worst case, unbounded. Drive it from an expandable stream (as above), not a
-fixed slice of a single digest — a finite buffer can throw mid-token.
-
-> **Entropy caveat.** A `generateFrom` token inherits the entropy of `next16`,
-> **not** `104^length`. A low-entropy or guessable seed yields a low-entropy,
-> guessable token. The `104^length` search space quoted for `generate` holds
-> only because its source is a CSPRNG. If you don't need determinism, use
-> `generate`.
-
-Throws `RangeError` on the same `length` bounds as `generate`.
+The seam behind `generate` (`generate(options)` is `generateFrom(secureUint16,
+options)`), exposed for **deterministic derivation**: supply your own 16-bit
+source (`next16: () => number` in `[0, 65536)`) to derive a stable token from a
+seed — a hash digest, UUID, or row id. Same rejection sampling, so no modulo
+bias for any source; elemtok takes no opinion on the hash or what the seed
+means. Two caveats: `next16` must be inexhaustible (a fixed digest slice can run
+dry mid-token, since rejection sampling resamples), and the token inherits the
+entropy of `next16`, **not** `104^length` — a guessable seed yields a guessable
+token. If you don't need determinism, use `generate`.
 
 ### `validate(token): boolean`
 
