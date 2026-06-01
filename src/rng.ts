@@ -21,7 +21,7 @@ const DRAW_SPACE = 1 << 16; // 65536
  *
  * Throws if no secure source is available rather than silently degrading.
  */
-function secureUint16(): number {
+export function secureUint16(): number {
   const cryptoObj = globalThis.crypto;
   if (!cryptoObj || typeof cryptoObj.getRandomValues !== "function") {
     throw new Error(
