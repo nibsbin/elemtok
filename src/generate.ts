@@ -20,34 +20,15 @@ export interface GenerateOptions {
 }
 
 /**
- * Generate a token from a caller-supplied 16-bit entropy source.
+ * The seam {@link generate} is built on, exposed for deterministic derivation:
+ * supply your own 16-bit source instead of the CSPRNG to derive a stable token
+ * from a seed. Same rejection sampling, so no modulo bias for any source.
  *
- * This is the seam {@link generate} is built on: `generate(options)` is exactly
- * `generateFrom(secureUint16, options)`. Each symbol is drawn from the
- * 104-symbol vocabulary via the same rejection sampling as `generate`
- * (see {@link randomIndexFrom}), so the no-modulo-bias guarantee holds for
- * whatever source you supply.
+ * `next16` must return an integer in `[0, 65536)` and be inexhaustible — a fixed
+ * digest slice can run dry mid-token, since rejection sampling resamples. The
+ * token inherits the entropy of `next16`, NOT `104^length`. See the README.
  *
- * Use it when you need a *deterministic* token derived from your own bytes — a
- * hash digest, a UUID, a row id — rather than fresh CSPRNG output. elemtok
- * stays out of the business of which hash you use or what the seed means; it
- * only maps a uniform 16-bit stream to symbols.
- *
- * Contract for `next16`: each call must return an integer in `[0, 65536)` (two
- * bytes of a 16-bit value). Because rejection sampling resamples on the rare
- * reject (~0.024% per draw for 104 symbols), the number of calls per token is
- * variable and, in the worst case, unbounded — so `next16` must be an
- * inexhaustible stream, not a finite buffer. A deterministic caller deriving a
- * token from a fixed-size digest should *expand* that digest (e.g. counter-mode
- * re-hashing) rather than hand over a slice that can run dry; see the README.
- *
- * Entropy caveat: the token inherits the entropy of `next16`, NOT `104^length`.
- * Driving this from a low-entropy or guessable seed yields a low-entropy,
- * guessable token. The `104^length` search space stated for {@link generate}
- * holds only because its source is a CSPRNG.
- *
- * @throws {RangeError} if `length` is not an integer in `[1, 65536]` (the upper
- *   bound guards against unbounded-allocation denial of service).
+ * @throws {RangeError} if `length` is not an integer in `[1, 65536]`.
  */
 export function generateFrom(
   next16: () => number,
