@@ -72,6 +72,18 @@ Throws `RangeError` if `length` is not an integer in `[1, 65536]`. The upper
 bound prevents an attacker-controlled length from causing an unbounded allocation.
 Tokens are a bare concatenation; split if needed: `token.match(/../g).join("-")`.
 
+### `generateFrom(next16, options?): string`
+
+The seam behind `generate` (`generate(options)` is `generateFrom(secureUint16,
+options)`), exposed for **deterministic derivation**: supply your own 16-bit
+source (`next16: () => number` in `[0, 65536)`) to derive a stable token from a
+seed — a hash digest, UUID, or row id. Same rejection sampling, so no modulo
+bias for any source; elemtok takes no opinion on the hash or what the seed
+means. Two caveats: `next16` must be inexhaustible (a fixed digest slice can run
+dry mid-token, since rejection sampling resamples), and the token inherits the
+entropy of `next16`, **not** `104^length` — a guessable seed yields a guessable
+token. If you don't need determinism, use `generate`.
+
 ### `validate(token): boolean`
 
 Returns `true` only if the input is a non-empty concatenation of known
