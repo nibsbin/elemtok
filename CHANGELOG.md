@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-06-01
+
+### Added
+
+- **`generateFrom(next16, options?)`** — the injectable-source seam that
+  `generate` is built on (`generate(options)` is exactly
+  `generateFrom(secureUint16, options)`). It draws symbols from a
+  caller-supplied 16-bit entropy stream instead of the platform CSPRNG, for
+  deterministic derivation of a token from your own bytes — a hash digest, a
+  UUID, a row id. Symbols are still drawn via the same rejection sampling over
+  the 104-symbol vocabulary, so the no-modulo-bias guarantee holds for any
+  source. `next16` must return an integer in `[0, 65536)` per call and must be
+  an inexhaustible stream (rejection sampling can resample). The token inherits
+  the entropy of `next16`, **not** `104^length`; see the README for the caveat
+  and a counter-mode expansion example. elemtok takes no opinion on which hash
+  you use or what the seed means.
+
+[2.1.0]: https://github.com/nibsbin/elemtok/releases/tag/v2.1.0
+
 ## [1.0.0] - 2026-05-30
 
 First stable release, and the first published under the name **`elemtok`**. It
