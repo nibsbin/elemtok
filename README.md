@@ -1,10 +1,6 @@
 # elemtok
 
 [![npm](https://img.shields.io/npm/v/elemtok)](https://www.npmjs.com/package/elemtok)
-[![npm downloads](https://img.shields.io/npm/dm/elemtok)](https://www.npmjs.com/package/elemtok)
-[![CI](https://img.shields.io/github/actions/workflow/status/nibsbin/elemtok/ci.yml?branch=main&label=CI)](https://github.com/nibsbin/elemtok/actions/workflows/ci.yml)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/elemtok)](https://bundlephobia.com/package/elemtok)
-[![license](https://img.shields.io/npm/l/elemtok)](LICENSE)
 
 Tokens built from chemical element symbols, designed for use in LLM contexts.
 
